@@ -1,5 +1,5 @@
 
-import {Product} from "../models/product.js";
+import {Product} from "../models/Product.js";
 import express from "express";
 import {z} from "zod";
 
@@ -42,7 +42,7 @@ router.post("/product",async(req,res)=>{
         res.status(201).send(product);
     } catch(e){
         res.status(400).send();
-}
+    }
 });
 
 router.delete("/products/:id",async(req,res)=>{
