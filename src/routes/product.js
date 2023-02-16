@@ -1,42 +1,60 @@
 
+import {Product} from "../models/product.js";
 import express from "express";
 import {z} from "zod";
 
 export const router = new express.Router();
 
-const products = [
-    {id:1,name:"Phone",price:8990},
-    {id:2,name:"Laptop",price:14990},
-    {id:3,name:"Headphones",price:1490}
-];
-
-router.get("/products",(req,res)=>{
-    res.send(products);
-});
-
-router.get("/products/:id",(req,res)=>{
-    const product = products.find(p=>p.id==req.params.id);
-    if(!product) {
-        res.status(404).send(`could not find product`);
-    } else {
-        res.send(product);
-    }
-});
-
-router.post("/product",(req,res)=>{
-    console.log(req.body);
-    const bodySchema = z.object({
-        name:z.string(),
-        price:z.number()
+router.get("/products",async(req,res)=>{
+    const {sortBy, sortOrder} = req.query;
+    const querySchema = z.object({
+        sortBy:z.enum(["name","price"]),
+        sortOrder:z.enum(["asc","desc"])
     });
-    if(!bodySchema.safeParse(req.body).success){
-        res.status(400).send("invalid keyvalue-pairs");
-    } else {
-        products.push(req.body);
-        res.send("product added");
+    const sort = querySchema.safeParse({sortBy,sortOrder}) ? {[sortBy]:sortOrder} : {};
+
+    try{
+        const products = await Product.find({}).sort(sort);
+        res.send(products);
+    } catch(e){
+        res.status(500).send();
     }
 });
 
-router.delete("products/:id",(req,res)=>{
+router.get("/products/:id",async(req,res)=>{
+    const _id = req.params.id;
 
+    try{
+        const product = await Product.findById(_id);
+        if(!product) {
+            return res.status(404).send();
+        }
+        res.send(product);
+    } catch(e){
+        res.status(500).send(e);
+    }
+});
+
+router.post("/product",async(req,res)=>{
+    const product = new Product(req.body);
+    try{
+        await product.save();
+        res.status(201).send(product);
+    } catch(e){
+        res.status(400).send();
+}
+});
+
+router.delete("/products/:id",async(req,res)=>{
+    const _id = req.params.id;
+
+    try{
+        const product = await Product.findByIdAndDelete(_id);
+        if(!product){
+            return res.status(404).send();
+        }
+        res.send(product);
+    } catch(e){
+        res.status(500).send();
+    }
 });

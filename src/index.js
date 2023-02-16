@@ -1,4 +1,5 @@
 
+import "./db/mongoose.js";
 import { router as productRouter } from "./routes/product.js";
 import express from "express";
 import cors from "cors";
